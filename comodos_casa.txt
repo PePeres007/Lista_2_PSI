@@ -1,0 +1,6 @@
+Sala
+Quarto
+Cozinha
+Corredor
+Lavanderia
+Banheiro
