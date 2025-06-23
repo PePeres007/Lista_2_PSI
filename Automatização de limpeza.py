@@ -2,20 +2,39 @@ import time
 import random
 import os
 
-# --- Constantes e Configuração ---
-# Nome do ficheiro que guardará os comodos da casa
+# Nome da lista que guardará os cómodos da casa
 ARQUIVO_COMODOS = "comodos_casa.txt"
 
-# Estado do robô.
+# Estado inicial simulado do robô.
 bateria_ok = True
 depositos_ok = True
 produto_limpeza_ok = True
 
+# --- Funções Auxiliares de Validação ---
+
+def nome_comodo_valido(nome):
+    """
+    Verifica se o nome de um cómodo é válido.
+    Retorna True se contiver apenas letras e espaços e não estiver vazio.
+    """
+    # 1. Verifica se a string está vazia ou contém apenas espaços
+    if not nome.strip():
+        return False
+    
+    # 2. Verifica cada caractere da string
+    for caractere in nome:
+        if not (caractere.isalpha() or caractere.isspace()):
+            return False
+            
+    # 3. Se passou por todas as verificações, o nome é válido
+    return True
+
 # --- Funções de Configuração ---
-def ConfigurarPrimeiroUso():
+
+def configurar_primeiro_uso():
     """
     Função executada apenas na primeira utilização.
-    Pede ao utilizador para inserir todos os cómodos e os guarda em uma lista.
+    Pede ao utilizador para inserir todos os cómodos e guarda-os num ficheiro.
     """
     print("Bem-vindo ao seu Robô de Limpeza!")
     print("Parece que esta é a primeira utilização.")
@@ -23,33 +42,37 @@ def ConfigurarPrimeiroUso():
     
     todos_os_comodos = []
     while True:
-        # Pede para inserir o nome do cómodo
         nome_comodo = input("Digite o nome de um cómodo (ou 'fim' para terminar): ")
+        
+        # Condição de saída do loop
         if nome_comodo.lower() == 'fim':
             if not todos_os_comodos:
                 print("!! Nenhum cómodo foi inserido. Tente novamente.")
                 continue
             break
-        todos_os_comodos.append(nome_comodo.strip().capitalize())
-        print(f"'{nome_comodo}' adicionado. Cómodos atuais: {', '.join(todos_os_comodos)}")
 
-    # Guarda a lista de cómodos no ficheiro de texto
-    with open(ARQUIVO_COMODOS, 'a', encoding='utf-8') as lista:
+        if not nome_comodo_valido(nome_comodo):
+            print("!! ERRO: Nome inválido. Use apenas letras e espaços, e não deixe em branco.")
+            continue # Pula para a próxima iteração do loop
+
+        todos_os_comodos.append(nome_comodo.strip().capitalize())
+        print(f"'{nome_comodo.capitalize()}' adicionado. Cómodos atuais: {', '.join(todos_os_comodos)}")
+
+    with open(ARQUIVO_COMODOS, 'w', encoding='utf-8') as f:
         for comodo in todos_os_comodos:
-            lista.write(f"{comodo}\n")
+            f.write(f"{comodo}\n")
             
-    print("\n Cómodos registados com sucesso!")
+    print("\nCómodos registados com sucesso!")
     # Na primeira vez, limpamos todos os cómodos registados
     return todos_os_comodos
 
-def ConfigurarRotaDiaria():
+def configurar_rota_diaria():
     """
     Função executada nas utilizações seguintes.
     Lê os cómodos do ficheiro, mostra ao utilizador e pergunta quais limpar.
     """
     print("Bem-vindo de volta!")
     
-    # Lê os cómodos registados a partir do ficheiro
     with open(ARQUIVO_COMODOS, 'r', encoding='utf-8') as f:
         todos_os_comodos = [linha.strip() for linha in f.readlines()]
 
@@ -60,15 +83,14 @@ def ConfigurarRotaDiaria():
     rota_de_hoje = []
     while True:
         try:
-            escolha = input("\nQuais cómodos deseja limpar hoje? Digite os números separados por vírgula (ex: 1, 3): ")
+            escolha = input("\nQuais cómodos deseja limpar hoje? Digite os números separados por vírgula (ex: 1, 3); "
+            "\n se desejar não limpar nenhum comodo aperte enter: ")
             if not escolha:
                 print("Nenhuma seleção feita. A encerrar a limpeza de hoje.")
-                time.sleep(2)
                 return []
             
             numeros_escolhidos = [int(num.strip()) for num in escolha.split(',')]
             
-            # Valida os números inseridos pelo utilizador
             rota_de_hoje = []
             valido = True
             for num in numeros_escolhidos:
@@ -80,8 +102,7 @@ def ConfigurarRotaDiaria():
                     break
             
             if valido:
-                # Remove duplicados caso o utilizador digite "1, 1"
-                rota_de_hoje = list(dict.fromkeys(rota_de_hoje)) 
+                rota_de_hoje = list(dict.fromkeys(rota_de_hoje)) # Remove duplicados
                 break
 
         except ValueError:
@@ -92,15 +113,12 @@ def ConfigurarRotaDiaria():
 
 # --- Funções de Limpeza ---
 
-def VerificarEstadoRobo():
-    """
-    Verifica as condições iniciais do robô (bateria, depósitos).
-    Retorna True se tudo estiver OK, senão, lida com o erro e retorna False.
-    """
+def verificar_estado_robo():
+    """Verifica as condições iniciais do robô (bateria, depósitos)."""
     global bateria_ok, depositos_ok
     if not bateria_ok:
         print("!! ERRO: Bateria fraca. A iniciar recarga...")
-        time.sleep(3)
+        time.sleep(2)
         bateria_ok = True
         print(">> Bateria carregada!")
     if not depositos_ok:
@@ -110,24 +128,22 @@ def VerificarEstadoRobo():
         print(">> Depósito esvaziado pelo utilizador.")
     return True
 
-def LimparComodo(comodo):
-    """
-    Executa a sequência de limpeza para um único cómodo.
-    """
-    print(f"\n--- A iniciar a limpeza do(a): {comodo} ")
+def limpar_comodo(comodo):
+    """Executa a sequência de limpeza para um único cómodo."""
+    print(f"\n--- A iniciar a limpeza do(a): {comodo} ---")
     print(f"[{comodo}] A organizar e a mover pequenos obstáculos...")
-    time.sleep(2)
-    if random.random() < 0.2: # utilizado apenas para fazer uma simulação de problema
-        print(f"!! AVISO: [{comodo}] Obstáculo pesado encontrado. Marcando localização e contornando.")
+    time.sleep(2.5)
+    if random.random() < 0.2:
+        print(f"!! AVISO: [{comodo}] Obstáculo pesado encontrado. A contornar.")
     print(f"[{comodo}] A aspirar o chão...")
-    time.sleep(3)
+    time.sleep(2)
     if comodo.lower() != "quarto" and produto_limpeza_ok:
         print(f"[{comodo}] A lavar o chão com pano húmido...")
         time.sleep(2)
     elif not produto_limpeza_ok:
         print(f"!! AVISO: [{comodo}] A lavagem foi pulada por falta de produto.")
     else:
-        print(f"[{comodo}] A lavagem foi pulada (chão de tapete).")
+        print(f"!! AVISO: [{comodo}] A lavagem foi pulada (chão de tapete).")
     print(f">>> {comodo} limpo! <<<")
     return True
 
@@ -135,21 +151,25 @@ def LimparComodo(comodo):
 if __name__ == "__main__":
     comodos_para_limpar = []
     
-    # A biblioteca 'os' ajuda a interagir com o sistema operativo, como verificar se um ficheiro existe.
     if not os.path.exists(ARQUIVO_COMODOS):
-        ConfigurarPrimeiroUso() 
-        comodos_para_limpar = ConfigurarRotaDiaria()
+        # Primeira vez: registra os cómodos e define a rota para limpar todos.
+        os.system('cls')
+        configurar_primeiro_uso
+
+        comodos_para_limpar = configurar_rota_diaria
     else:
-        comodos_para_limpar = ConfigurarRotaDiaria()
+        # Outras vezes: pergunta ao utilizador quais cómodos limpar.
+        os.system('cls')
+        comodos_para_limpar = configurar_rota_diaria()
 
     # Prossegue com a limpeza apenas se houver cómodos selecionados e o robô estiver OK
     if comodos_para_limpar:
         print("\n### INICIANDO SISTEMA DE LIMPEZA AUTOMATIZADA ###")
-        if VerificarEstadoRobo():
+        if verificar_estado_robo():
             print("\nRobô pronto para iniciar a limpeza.")
             comodos_limpos = []
             for comodo in comodos_para_limpar:
-                if LimparComodo(comodo):
+                if limpar_comodo(comodo):
                     comodos_limpos.append(comodo)
             
             print("\n### LIMPEZA FINALIZADA! ###")
