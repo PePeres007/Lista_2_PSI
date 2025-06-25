@@ -15,7 +15,7 @@ produto_limpeza_ok = True
 
 def nome_comodo_valido(nome):
     """
-    Verifica se o nome de um cómodo é váli
+    Verifica se o nome de um cómodo é válido.
     Retorna True se contiver apenas letras e espaços e não estiver vazio.
     """
     # 1. Verifica se a string está vazia ou contém apenas espaços
@@ -38,7 +38,7 @@ def configurar_primeiro_uso():
     Função executada apenas na primeira utilização.
     Pede ao utilizador para inserir todos os cómodos e guarda-os num ficheiro.
     """
-    print("Bem-vindo")
+    print("Bem-vindo ao sistema de limpeza automatizada!")
     print("Parece que esta é a primeira utilização.")
     print("Vamos registar todos os cómodos da sua casa.")
 
